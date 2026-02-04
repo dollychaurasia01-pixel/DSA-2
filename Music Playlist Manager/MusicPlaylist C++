@@ -9,11 +9,18 @@
 
 using namespace std;
 
-
+// Updated Track struct with a constructor for VS Code compatibility
 struct Track {
     int id;
     string title, artist, album, genre;
     int duration;
+
+    // Default constructor
+    Track() : id(0), duration(0) {}
+
+    // Parametrized constructor
+    Track(int _id, string _t, string _ar, string _al, int _d, string _g)
+        : id(_id), title(_t), artist(_ar), album(_al), duration(_d), genre(_g) {}
 };
 
 class MusicPlaylistManager {
@@ -21,7 +28,6 @@ private:
     unordered_map<int, Track> trackMap;
     deque<int> order;
 
-    
     string lower(string s) {
         for (char &c : s) c = tolower(c);
         return s;
@@ -32,7 +38,8 @@ public:
         if (trackMap.find(id) == trackMap.end()) {
             order.push_back(id);
         }
-        trackMap[id] = {id, t, ar, al, d, g};
+        // Explicitly calling the Track constructor
+        trackMap[id] = Track(id, t, ar, al, d, g);
     }
 
     void removeTrack(int id) {
@@ -45,7 +52,6 @@ public:
         query = lower(query);
         vector<int> matches;
         
-        // Iterate through order to maintain playlist sequence in search results
         for (int id : order) {
             Track &t = trackMap[id];
             string target = (field == "title") ? t.title : (field == "artist") ? t.artist : t.genre;
@@ -100,7 +106,6 @@ public:
 };
 
 int main() {
-    // Fast I/O for high Q constraints
     ios_base::sync_with_stdio(false);
     cin.tie(NULL);
 
