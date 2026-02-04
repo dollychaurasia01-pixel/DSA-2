@@ -1,0 +1,133 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
+#include <deque>
+#include <algorithm>
+#include <random>
+#include <ctime>
+
+using namespace std;
+
+
+struct Track {
+    int id;
+    string title, artist, album, genre;
+    int duration;
+};
+
+class MusicPlaylistManager {
+private:
+    unordered_map<int, Track> trackMap;
+    deque<int> order;
+
+    
+    string lower(string s) {
+        for (char &c : s) c = tolower(c);
+        return s;
+    }
+
+public:
+    void addTrack(int id, string t, string ar, string al, int d, string g) {
+        if (trackMap.find(id) == trackMap.end()) {
+            order.push_back(id);
+        }
+        trackMap[id] = {id, t, ar, al, d, g};
+    }
+
+    void removeTrack(int id) {
+        if (trackMap.erase(id)) {
+            order.erase(remove(order.begin(), order.end(), id), order.end());
+        }
+    }
+
+    void searchTrack(string query, string field) {
+        query = lower(query);
+        vector<int> matches;
+        
+        // Iterate through order to maintain playlist sequence in search results
+        for (int id : order) {
+            Track &t = trackMap[id];
+            string target = (field == "title") ? t.title : (field == "artist") ? t.artist : t.genre;
+            if (lower(target).find(query) != string::npos) {
+                matches.push_back(id);
+            }
+        }
+
+        cout << "[";
+        for (size_t i = 0; i < matches.size(); ++i) {
+            Track &t = trackMap[matches[i]];
+            cout << "[" << t.id << ", " << t.title << ", " << t.artist << ", " << t.album << ", " << t.duration << ", " << t.genre << "]";
+            if (i < matches.size() - 1) cout << ",\n ";
+        }
+        cout << "]" << endl;
+    }
+
+    void playNext() {
+        if (order.empty()) {
+            cout << "[]" << endl;
+            return;
+        }
+        int id = order.front();
+        Track &t = trackMap[id];
+        cout << "[" << t.id << ", " << t.title << ", " << t.artist << ", " << t.album << ", " << t.duration << ", " << t.genre << "]" << endl;
+        
+        order.pop_front();
+        trackMap.erase(id);
+    }
+
+    void shufflePlaylist() {
+        if (order.empty()) return;
+        vector<int> v(order.begin(), order.end());
+        static mt19937 g(static_cast<unsigned>(time(0))); 
+        shuffle(v.begin(), v.end(), g);
+        order.assign(v.begin(), v.end());
+        cout << "Playlist Shuffled" << endl;
+    }
+
+    void getPlaylistSummary() {
+        long long totalDuration = 0;
+        cout << "[";
+        for (size_t i = 0; i < order.size(); ++i) {
+            Track &t = trackMap[order[i]];
+            totalDuration += t.duration;
+            cout << "[" << t.id << ", " << t.title << ", " << t.artist << ", " << t.album << ", " << t.duration << ", " << t.genre << "]";
+            if (i < order.size() - 1) cout << ",\n ";
+        }
+        cout << "]" << endl;
+        cout << "Total Duration: " << totalDuration << endl;
+    }
+};
+
+int main() {
+    // Fast I/O for high Q constraints
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    MusicPlaylistManager manager;
+    int Q;
+    if (!(cin >> Q)) return 0;
+
+    while (Q--) {
+        string cmd;
+        cin >> cmd;
+        if (cmd == "addTrack") {
+            int id, d; string t, ar, al, g;
+            cin >> id >> t >> ar >> al >> d >> g;
+            manager.addTrack(id, t, ar, al, d, g);
+        } else if (cmd == "removeTrack") {
+            int id; cin >> id;
+            manager.removeTrack(id);
+        } else if (cmd == "searchTrack") {
+            string q, f; cin >> q >> f;
+            manager.searchTrack(q, f);
+        } else if (cmd == "playNext") {
+            manager.playNext();
+        } else if (cmd == "shufflePlaylist") {
+            manager.shufflePlaylist();
+        } else if (cmd == "getPlaylistSummary") {
+            manager.getPlaylistSummary();
+        }
+    }
+    return 0;
+}
